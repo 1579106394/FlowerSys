@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.flower.mapper.OrderMapper">
+
+    <resultMap id="Order" type="orders">
+        <id property="orderId" column="order_id"/>
+        <result property="orderCreatedTime" column="order_created_time"/>
+        <result property="orderDelete" column="order_delete"/>
+        <association property="user" column="order_user_id" javaType="user">
+            <id property="userId" column="user_id" />
+            <result property="username" column="username" />
+            <result property="password" column="password" />
+            <result property="userFlag" column="user_flag" />
+        </association>
+        <collection property="flowerList" ofType="Flower">
+            <id property="flwId" column="flw_id"/>
+            <result property="flwName" column="flw_name"/>
+            <result property="flwPrice" column="flw_price"/>
+            <result property="flwNum" column="flw_num"/>
+            <result property="flwDelete" column="flw_delete"/>
+            <association property="type" column="flw_type" javaType="type">
+                <id property="typeId" column="type_id"/>
+                <result property="typeName" column="type_name"/>
+     		   <result property="typeNum" column="type_num" />
+            </association>
+        </collection>
+    </resultMap>
+    
+    <select id="getOrderList" parameterType="user" resultMap="Order">
+		SELECT
+			*
+		FROM
+			orders o
+		LEFT JOIN USER u ON o.order_user_id = u.user_id,
+		 flower f,
+		 type t,
+		 order_flower of
+		WHERE
+			o.order_id = of.order_id
+		AND f.flw_id = of.flower_id
+		AND f.flw_type = t.type_id
+		and o.order_delete = 1
+		<if test="userFlag == 1">
+			and o.order_user_id = #{userId}
+		</if>
+    </select>
+    
+    <update id="deleteOrder">
+    	update orders set
+    	order_delete = 2
+    	where order_id = #{value}
+    </update>
+    
+    <insert id="addOrder" parameterType="orders">
+    	insert into orders values
+    	(#{orderId}, #{user.userId}, 0, #{orderCreatedTime}, 1)
+    </insert>
+    
+    <insert id="addOrderFlower">
+    	insert into order_flower values(#{0}, #{1})
+    </insert>
+
+</mapper>

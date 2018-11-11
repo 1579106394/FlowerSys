@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.flower.mapper.FlowerMapper">
+
+    <resultMap id="Flower" type="flower">
+        <id property="flwId" column="flw_id"/>
+        <result property="flwName" column="flw_name"/>
+        <result property="flwPrice" column="flw_price"/>
+        <result property="flwNum" column="flw_num"/>
+        <result property="flwDelete" column="flw_delete"/>
+        <association property="type" column="flw_type" javaType="type">
+            <id property="typeId" column="type_id"/>
+            <result property="typeName" column="type_name"/>
+        <result property="typeNum" column="type_num" />
+        </association>
+    </resultMap>
+    
+    <select id="getFlowerList" parameterType="flower" resultMap="Flower">
+    	select * from flower left join type on flw_type = type_id
+    	where flw_delete = 1
+    	
+    	<if test="flwName != null and flwName != ''">
+    		and flw_name like '%${flwName}%'
+    	</if>
+    	<if test="flwPrice != null and flwPrice != ''">
+    		and flw_price = #{flwPrice}
+    	</if>
+    	<if test="flwNum != null and flwNum != ''">
+    		and flw_num = #{flwNum}
+    	</if>
+    	<if test="type != null">
+    	<if test="type.typeId != null and type.typeId != ''">
+    		and flw_type = #{type.typeId}
+    	</if>
+    	</if>
+    	
+    </select>
+    
+    <update id="deleteFlower">
+    	update flower set
+    	flw_delete = 2
+    	where flw_id = #{value}
+    </update>
+    
+    <select id="getFlowerById" resultMap="Flower">
+    	select * from flower left join type on flw_type = type_id
+    	where flw_id = #{value}
+    </select>
+    
+    <update id="editFlower" parameterType="flower">
+    	update flower set
+    	flw_name=#{flwName},
+    	flw_price=#{flwPrice},
+    	flw_num=#{flwNum},
+    	flw_type=#{type.typeId}
+    	where flw_id = #{flwId}
+    </update>
+    
+    <insert id="addFlower" parameterType="flower">
+    	insert into flower values
+    	(#{flwId}, #{flwName}, #{flwPrice}, #{type.typeId}, #{flwNum}, 1)
+    </insert>
+    
+    <select id="getCountPrice" parameterType="orders" resultType="Double">
+    	select sum(f.flw_price) from flower f, orders o, order_flower of 
+		where f.flw_id = of.flower_id
+		and o.order_id = of.order_id
+		and o.order_id = #{orderId}
+    </select>
+    
+    <select id="getFlowerListByOrder" resultMap="Flower">
+    	select * from flower f, order_flower of, type t
+		where f.flw_id = of.flower_id
+		and f.flw_type = t.type_id
+		and of.order_id = #{value}
+    </select>
+
+</mapper>
